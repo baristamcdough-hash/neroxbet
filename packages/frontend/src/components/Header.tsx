@@ -4,9 +4,10 @@ import { useState } from "react";
 
 interface HeaderProps {
   onMenuToggle?: () => void;
+  onProfileToggle?: () => void;
 }
 
-export default function Header({ onMenuToggle }: HeaderProps) {
+export default function Header({ onMenuToggle, onProfileToggle }: HeaderProps) {
   const [fiatBalance] = useState<number>(0);
   const [bonusBalance] = useState<number>(4000);
 
@@ -38,7 +39,7 @@ export default function Header({ onMenuToggle }: HeaderProps) {
         <div className="w-8 h-8 rounded-full bg-accents-lime flex items-center justify-center">
           <span className="text-white font-bold text-sm">N</span>
         </div>
-        <span className="text-white font-bold text-lg hidden sm:inline">Nexarox</span>
+        <span className="text-accents-gold font-bold text-lg hidden sm:inline">NexaroX</span>
       </div>
 
       <div className="ml-auto flex items-center gap-2 md:gap-4">
@@ -50,8 +51,31 @@ export default function Header({ onMenuToggle }: HeaderProps) {
             Bonus: <span className="text-accents-gold font-semibold">{bonusBalance} KES</span>
           </span>
         </div>
-        <button className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-white text-sm">
+
+        {/* Profile icon */}
+        <button
+          onClick={onProfileToggle}
+          className="w-8 h-8 rounded-full bg-accents-lime flex items-center justify-center text-white text-sm font-bold"
+        >
           U
+        </button>
+
+        {/* Three-dot menu - mobile only */}
+        <button
+          onClick={onProfileToggle}
+          className="md:hidden w-8 h-8 flex items-center justify-center text-white"
+          aria-label="More options"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5"
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <circle cx="12" cy="5" r="2" />
+            <circle cx="12" cy="12" r="2" />
+            <circle cx="12" cy="19" r="2" />
+          </svg>
         </button>
       </div>
     </header>
