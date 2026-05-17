@@ -1,0 +1,9 @@
+{
+  "name": "@neroxbet/frontend",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "echo 'Frontend not yet configured'",
+    "build": "echo 'Frontend not yet configured'"
+  }
+}

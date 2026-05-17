@@ -1,0 +1,14 @@
+{
+  "name": "neroxbet",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/shared",
+    "packages/backend",
+    "packages/frontend"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace=packages/shared && npm run build --workspace=packages/backend",
+    "test": "npm test --workspace=packages/backend"
+  }
+}
