@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
+import { placeBet as placeBetApi, BetResponse } from "@/lib/api";
 
 export interface BetSelection {
   matchId: string;
@@ -55,6 +56,23 @@ export function useBetslip() {
     return stake * totalCoefficient;
   }, [stake, totalCoefficient]);
 
+  const submitBet = useCallback(
+    async (userId: string, token: string): Promise<BetResponse> => {
+      const betSelections = selections.map((s) => ({
+        matchId: s.matchId,
+        homeTeam: s.homeTeam,
+        awayTeam: s.awayTeam,
+        market: s.market,
+        odds: s.odds,
+      }));
+      const result = await placeBetApi(userId, betType, stake, betSelections, token);
+      setSelections([]);
+      setStake(0);
+      return result;
+    },
+    [selections, betType, stake]
+  );
+
   return {
     selections,
     betType,
@@ -66,5 +84,6 @@ export function useBetslip() {
     addSelection,
     removeSelection,
     clearSelections,
+    submitBet,
   };
 }

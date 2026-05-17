@@ -1,15 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { useWallet } from "@/hooks/useWallet";
 
 interface HeaderProps {
   onMenuToggle?: () => void;
   onProfileToggle?: () => void;
+  onLoginClick?: () => void;
 }
 
-export default function Header({ onMenuToggle, onProfileToggle }: HeaderProps) {
-  const [fiatBalance] = useState<number>(0);
-  const [bonusBalance] = useState<number>(4000);
+export default function Header({ onMenuToggle, onProfileToggle, onLoginClick }: HeaderProps) {
+  const { isAuthenticated } = useAuth();
+  const { fiatBalance, bonusBalance } = useWallet();
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background-panel border-b border-gray-800 h-14 flex items-center px-3 md:px-4">
@@ -43,22 +45,33 @@ export default function Header({ onMenuToggle, onProfileToggle }: HeaderProps) {
       </div>
 
       <div className="ml-auto flex items-center gap-2 md:gap-4">
-        <div className="flex flex-col items-end text-[10px] md:text-sm">
-          <span className="text-gray-300">
-            Balance: <span className="text-white font-semibold">{fiatBalance} KES</span>
-          </span>
-          <span className="text-gray-300">
-            Bonus: <span className="text-accents-gold font-semibold">{bonusBalance} KES</span>
-          </span>
-        </div>
+        {isAuthenticated ? (
+          <>
+            <div className="flex flex-col items-end text-[10px] md:text-sm">
+              <span className="text-gray-300">
+                Balance: <span className="text-white font-semibold">{fiatBalance} KES</span>
+              </span>
+              <span className="text-gray-300">
+                Bonus: <span className="text-accents-gold font-semibold">{bonusBalance} KES</span>
+              </span>
+            </div>
 
-        {/* Profile icon */}
-        <button
-          onClick={onProfileToggle}
-          className="w-8 h-8 rounded-full bg-accents-lime flex items-center justify-center text-white text-sm font-bold"
-        >
-          U
-        </button>
+            {/* Profile icon */}
+            <button
+              onClick={onProfileToggle}
+              className="w-8 h-8 rounded-full bg-accents-lime flex items-center justify-center text-white text-sm font-bold"
+            >
+              U
+            </button>
+          </>
+        ) : (
+          <button
+            onClick={onLoginClick}
+            className="bg-accents-lime text-white text-sm font-bold px-4 py-1.5 rounded-full hover:bg-accents-lime/90 transition-colors"
+          >
+            Login
+          </button>
+        )}
 
         {/* Three-dot menu - mobile only */}
         <button

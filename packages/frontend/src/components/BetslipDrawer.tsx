@@ -2,20 +2,68 @@
 
 import { useState } from "react";
 import QuickStake from "./QuickStake";
+import { useAuth } from "@/context/AuthContext";
+import { useBetslip } from "@/hooks/useBetslip";
 
 type BetTab = "ordinary" | "express" | "system";
 
-export default function BetslipDrawer() {
+interface BetslipDrawerProps {
+  onLoginClick?: () => void;
+}
+
+export default function BetslipDrawer({ onLoginClick }: BetslipDrawerProps) {
+  const { user, isAuthenticated } = useAuth();
+  const { selections, stake, setStake, totalCoefficient, potentialPayout, submitBet, setBetType, betType } = useBetslip();
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<BetTab>("ordinary");
-  const [stake, setStake] = useState<number>(0);
   const [agreeCoeffChange, setAgreeCoeffChange] = useState<boolean>(false);
+  const [betError, setBetError] = useState<string | null>(null);
+  const [betSuccess, setBetSuccess] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const tabs: { key: BetTab; label: string }[] = [
     { key: "ordinary", label: "Ordinary" },
     { key: "express", label: "Express" },
     { key: "system", label: "System" },
   ];
+
+  const handleTabChange = (tab: BetTab) => {
+    setActiveTab(tab);
+    setBetType(tab);
+  };
+
+  const handleMakeBet = async () => {
+    setBetError(null);
+    setBetSuccess(null);
+
+    if (!isAuthenticated || !user) {
+      setBetError("Please login to place a bet");
+      onLoginClick?.();
+      return;
+    }
+
+    if (selections.length === 0) {
+      setBetError("Add selections to your betslip first");
+      return;
+    }
+
+    if (stake <= 0) {
+      setBetError("Enter a stake amount");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      await submitBet(user.userId, user.token);
+      setBetSuccess("Bet placed successfully!");
+      setTimeout(() => setBetSuccess(null), 3000);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to place bet";
+      setBetError(message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div className="fixed bottom-14 md:bottom-0 left-0 right-0 z-40">
@@ -24,7 +72,9 @@ export default function BetslipDrawer() {
         onClick={() => setIsOpen(!isOpen)}
         className="w-full bg-background-panel border-t border-gray-800 py-2 px-4 flex items-center justify-between"
       >
-        <span className="text-sm font-medium text-white">Betslip</span>
+        <span className="text-sm font-medium text-white">
+          Betslip {selections.length > 0 && `(${selections.length})`}
+        </span>
         <span className="text-xs text-gray-400">{isOpen ? "Close" : "Open"}</span>
       </button>
 
@@ -36,7 +86,7 @@ export default function BetslipDrawer() {
             {tabs.map((tab) => (
               <button
                 key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
+                onClick={() => handleTabChange(tab.key)}
                 className={`flex-1 py-1.5 text-xs font-medium rounded-full transition-colors ${
                   activeTab === tab.key
                     ? "bg-accents-lime text-white"
@@ -52,30 +102,71 @@ export default function BetslipDrawer() {
           <div className="mb-4">
             {activeTab === "ordinary" && (
               <div className="text-sm text-gray-300">
-                <p className="text-center text-gray-500 py-4">
-                  Select a match to add to your betslip
-                </p>
+                {selections.length === 0 ? (
+                  <p className="text-center text-gray-500 py-4">
+                    Select a match to add to your betslip
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {selections.map((s) => (
+                      <div key={s.matchId} className="bg-background-main rounded p-2 flex justify-between items-center">
+                        <span className="text-xs">{s.homeTeam} vs {s.awayTeam}</span>
+                        <span className="text-accents-lime text-xs font-bold">{s.odds.toFixed(2)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
             {activeTab === "express" && (
               <div className="text-sm text-gray-300">
                 <div className="flex justify-between items-center mb-2">
                   <span>Total Coefficient:</span>
-                  <span className="text-accents-lime font-bold">1.00</span>
+                  <span className="text-accents-lime font-bold">{totalCoefficient.toFixed(2)}</span>
                 </div>
-                <p className="text-center text-gray-500 py-4">
-                  Add 2+ selections for express bet
-                </p>
+                {selections.length < 2 ? (
+                  <p className="text-center text-gray-500 py-4">
+                    Add 2+ selections for express bet
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {selections.map((s) => (
+                      <div key={s.matchId} className="bg-background-main rounded p-2 flex justify-between items-center">
+                        <span className="text-xs">{s.homeTeam} vs {s.awayTeam}</span>
+                        <span className="text-accents-lime text-xs font-bold">{s.odds.toFixed(2)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
             {activeTab === "system" && (
               <div className="text-sm text-gray-300">
-                <p className="text-center text-gray-500 py-4">
-                  Add 3+ selections for system bet
-                </p>
+                {selections.length < 3 ? (
+                  <p className="text-center text-gray-500 py-4">
+                    Add 3+ selections for system bet
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {selections.map((s) => (
+                      <div key={s.matchId} className="bg-background-main rounded p-2 flex justify-between items-center">
+                        <span className="text-xs">{s.homeTeam} vs {s.awayTeam}</span>
+                        <span className="text-accents-lime text-xs font-bold">{s.odds.toFixed(2)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>
+
+          {/* Potential payout */}
+          {potentialPayout > 0 && (
+            <div className="flex justify-between items-center mb-3 text-sm">
+              <span className="text-gray-400">Potential payout:</span>
+              <span className="text-accents-gold font-bold">{potentialPayout.toFixed(2)} KES</span>
+            </div>
+          )}
 
           {/* Quick Stakes */}
           <QuickStake
@@ -113,9 +204,21 @@ export default function BetslipDrawer() {
             </button>
           </div>
 
+          {/* Error/Success messages */}
+          {betError && (
+            <p className="text-red-400 text-xs mt-2">{betError}</p>
+          )}
+          {betSuccess && (
+            <p className="text-green-400 text-xs mt-2">{betSuccess}</p>
+          )}
+
           {/* Make Bet Button */}
-          <button className="w-full mt-4 bg-accents-gold text-white font-bold py-3 rounded-lg hover:bg-accents-gold/90 transition-colors">
-            Make bet
+          <button
+            onClick={handleMakeBet}
+            disabled={submitting}
+            className="w-full mt-4 bg-accents-gold text-white font-bold py-3 rounded-lg hover:bg-accents-gold/90 transition-colors disabled:opacity-50"
+          >
+            {submitting ? "Placing bet..." : "Make bet"}
           </button>
         </div>
       )}
