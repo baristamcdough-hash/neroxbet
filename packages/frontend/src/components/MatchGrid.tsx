@@ -27,11 +27,11 @@ export default function MatchGrid() {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3">
       {matches.map((match) => (
         <div
           key={match.id}
-          className="bg-background-panel rounded-lg p-3 border border-gray-800"
+          className="bg-background-panel rounded-lg p-2 md:p-3 border border-gray-800"
         >
           <div className="flex justify-between items-center mb-2">
             <span className="text-[10px] text-gray-400">{match.league}</span>
